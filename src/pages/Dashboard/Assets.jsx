@@ -5,7 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function Assets() {
-  const { assets, categories, departments, addAsset } = useAppContext();
+  const { assets, categories, departments, addAsset, deleteAsset } = useAppContext();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +38,11 @@ export default function Assets() {
     });
   };
 
+  const handleMockImport = () => {
+    toast.success('15 Assets Imported from CSV successfully');
+    addAsset({ name: 'Imported Dell Desktop', category: 'Desktop', department: 'HR', status: 'Available' });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -49,9 +54,13 @@ export default function Assets() {
           <p className="text-slate-400 mt-1">Track and manage all company equipment.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+          <button onClick={handleMockImport} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
             <Upload className="w-4 h-4" />
             Import CSV
+          </button>
+          <button onClick={() => toast.success('Exporting assets data...')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+            <Download className="w-4 h-4" />
+            Export
           </button>
           <button 
             onClick={() => setShowModal(true)}
@@ -140,12 +149,22 @@ export default function Assets() {
                   <td className="px-6 py-4 text-slate-300 text-sm">{asset.department}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Generate QR">
+                      <button onClick={() => toast.success('QR Code Generated')} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Generate QR">
                         <QrCode className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+                      <div className="relative group/menu">
+                        <button className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        <div className="absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10">
+                          <button onClick={() => {
+                            if(window.confirm('Delete this asset?')) {
+                              deleteAsset(asset.id);
+                              toast.success('Asset deleted!');
+                            }
+                          }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors">Delete</button>
+                        </div>
+                      </div>
                     </div>
                   </td>
                 </motion.tr>

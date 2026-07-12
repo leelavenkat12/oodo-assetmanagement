@@ -86,59 +86,71 @@ export default function DashboardLayout() {
             Logout
           </button>
         </div>
-      </motion.aside>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        
-        {/* Header */}
-        <header className="h-16 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-6 z-10 sticky top-0">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 -ml-2 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+        {/* Top Header */}
+        <header className="h-20 bg-slate-900/30 backdrop-blur border-b border-slate-800 flex items-center justify-between px-8 z-30 hidden md:flex">
+          <div>
+            <h2 className="text-xl font-bold text-slate-100">Welcome, {currentUser?.name || 'Admin'} 👋</h2>
+            <p className="text-sm text-slate-400">Manage your entire organization from here.</p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="text" 
+                placeholder="Search anything..." 
+                className="bg-slate-950 border border-slate-800 rounded-full pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 w-64 transition-all"
+              />
+            </div>
+
             {/* Notifications */}
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors relative"
+                className="relative p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-full transition-colors"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-slate-900"></span>
+                )}
               </button>
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl overflow-hidden z-50"
-                >
-                  <div className="px-4 py-3 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
                     <h3 className="font-medium text-slate-200">Notifications</h3>
-                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">{notifications.length} New</span>
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">{unreadCount} New</span>
                   </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.map(notif => (
-                      <div key={notif.id} className="px-4 py-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                        <p className="text-sm font-medium text-slate-200">{notif.title}</p>
-                        <p className="text-xs text-slate-400 mt-1">{notif.message}</p>
-                        <p className="text-[10px] text-slate-500 mt-2">{notif.time}</p>
-                      </div>
-                    ))}
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {myNotifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-slate-500">No new notifications.</div>
+                    ) : (
+                      myNotifications.map(notif => (
+                        <div key={notif.id} className={`p-4 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/30 transition-colors ${!notif.read ? 'bg-slate-800/10' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="text-sm font-medium text-slate-200">{notif.title}</h4>
+                            <span className="text-[10px] text-slate-500">{new Date(notif.date).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs text-slate-400">{notif.message}</p>
+                          <div className="mt-2 flex gap-2">
+                            {!notif.read && (
+                              <button onClick={() => markNotificationRead(notif.id)} className="text-[10px] text-blue-400 hover:text-blue-300">Mark Read</button>
+                            )}
+                            <button onClick={() => deleteNotification(notif.id)} className="text-[10px] text-red-400 hover:text-red-300">Delete</button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <div className="p-2 bg-slate-900">
-                    <button className="w-full py-2 text-sm text-blue-400 hover:text-blue-300 text-center transition-colors">
-                      Mark all as read
-                    </button>
+                  <div className="p-3 bg-slate-950/80 text-center border-t border-slate-800">
+                    <button className="text-xs text-blue-400 hover:text-blue-300 font-medium">View All Notifications</button>
                   </div>
-                </motion.div>
+                </div>
               )}
             </div>
 

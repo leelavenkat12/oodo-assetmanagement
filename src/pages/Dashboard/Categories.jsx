@@ -5,8 +5,9 @@ import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function Categories() {
-  const { categories, addCategory } = useAppContext();
+  const { categories, addCategory, deleteCategory } = useAppContext();
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -25,6 +26,15 @@ export default function Categories() {
     setShowModal(false);
     setFormData({ name: '', depreciationPeriod: '5 Years', warrantyRequired: false, qrEnabled: true });
   };
+
+  const handleDelete = (id) => {
+    if(window.confirm('Are you sure you want to delete this category?')) {
+      deleteCategory(id);
+      toast.success('Category deleted successfully');
+    }
+  };
+
+  const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -52,6 +62,8 @@ export default function Categories() {
             <input 
               type="text" 
               placeholder="Search categories..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
@@ -68,7 +80,10 @@ export default function Categories() {
               </tr>
             </thead>
             <tbody>
-              {categories.map((cat, i) => (
+              {filteredCategories.length === 0 && (
+                <tr><td colSpan="5" className="p-6 text-center text-slate-500">No categories found.</td></tr>
+              )}
+              {filteredCategories.map((cat, i) => (
                 <motion.tr 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -94,10 +109,10 @@ export default function Categories() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors">
+                      <button onClick={() => toast.success('Edit feature coming soon!')} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                      <button onClick={() => handleDelete(cat.id)} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

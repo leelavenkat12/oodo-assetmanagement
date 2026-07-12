@@ -69,19 +69,6 @@ export default function ActivityLogs() {
               </motion.div>
             ))}
 
-            {/* Dummy extra logs */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="relative pl-8 md:pl-10"
-            >
-              <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-slate-950 border-2 border-slate-600"></div>
-              <div className="bg-slate-950/50 border border-slate-800/80 rounded-xl p-4 opacity-70">
-                <p className="text-slate-300">System backup completed successfully</p>
-                <p className="mt-2 text-xs text-slate-500">Yesterday, 11:59 PM</p>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>

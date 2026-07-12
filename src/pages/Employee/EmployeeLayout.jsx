@@ -20,12 +20,15 @@ export default function EmployeeLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logoutUser } = useAppContext();
+  const { currentUser, logoutUser, notifications, markNotificationRead, deleteNotification } = useAppContext();
 
   const handleLogout = () => {
     logoutUser();
     navigate('/login');
   };
+
+  const myNotifications = notifications?.filter(n => n.recipientRole === 'Employee' || n.recipientRole === 'All') || [];
+  const unreadCount = myNotifications.filter(n => !n.read).length;
 
   const PageTitle = NAV_ITEMS.find(item => item.path === location.pathname)?.name || 'Profile';
 
@@ -113,7 +116,9 @@ export default function EmployeeLayout() {
                 className="relative p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-full transition-colors"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+                )}
               </button>
               
               <AnimatePresence>
@@ -126,17 +131,28 @@ export default function EmployeeLayout() {
                   >
                     <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/30">
                       <h3 className="font-semibold text-slate-200">Notifications</h3>
-                      <button className="text-xs text-blue-400 hover:text-blue-300">Mark all as read</button>
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">{unreadCount} New</span>
                     </div>
                     <div className="max-h-[300px] overflow-y-auto">
-                      <div className="p-4 border-b border-slate-800 hover:bg-slate-800/30 cursor-pointer">
-                        <p className="text-sm text-slate-300">Your booking for <span className="font-medium text-blue-400">Meeting Room A</span> is approved.</p>
-                        <p className="text-xs text-slate-500 mt-1">2 hours ago</p>
-                      </div>
-                      <div className="p-4 border-b border-slate-800 hover:bg-slate-800/30 cursor-pointer">
-                        <p className="text-sm text-slate-300">New company policy updated.</p>
-                        <p className="text-xs text-slate-500 mt-1">1 day ago</p>
-                      </div>
+                      {myNotifications.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-slate-500">No new notifications.</div>
+                      ) : (
+                        myNotifications.map(notif => (
+                          <div key={notif.id} className={`p-4 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/30 transition-colors ${!notif.read ? 'bg-slate-800/10' : ''}`}>
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="text-sm font-medium text-slate-200">{notif.title}</h4>
+                              <span className="text-[10px] text-slate-500">{new Date(notif.date).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs text-slate-400">{notif.message}</p>
+                            <div className="mt-2 flex gap-2">
+                              {!notif.read && (
+                                <button onClick={() => markNotificationRead(notif.id)} className="text-[10px] text-blue-400 hover:text-blue-300">Mark Read</button>
+                              )}
+                              <button onClick={() => deleteNotification(notif.id)} className="text-[10px] text-red-400 hover:text-red-300">Delete</button>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </motion.div>
                 )}

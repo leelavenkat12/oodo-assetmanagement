@@ -5,7 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function Departments() {
-  const { departments, users, addDepartment } = useAppContext();
+  const { departments, users, addDepartment, deleteDepartment } = useAppContext();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', code: '', head: 'Select Head' });
 
@@ -53,10 +53,18 @@ export default function Departments() {
             transition={{ delay: i * 0.1 }}
             className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 group hover:border-slate-700 transition-colors relative"
           >
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 relative group/menu">
               <button className="p-2 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition-colors">
                 <MoreVertical className="w-4 h-4" />
               </button>
+              <div className="absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10">
+                <button onClick={() => {
+                  if(window.confirm('Delete this department?')) {
+                    deleteDepartment(dept.id);
+                    toast.success('Department deleted!');
+                  }
+                }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors">Delete</button>
+              </div>
             </div>
             
             <div className="mb-6">

@@ -15,6 +15,18 @@ import Reports from './pages/Dashboard/Reports';
 import ActivityLogs from './pages/Dashboard/ActivityLogs';
 import Settings from './pages/Dashboard/Settings';
 
+// Department Head Pages
+import DepartmentHeadLayout from './pages/DepartmentHead/DepartmentHeadLayout';
+import DepartmentDashboard from './pages/DepartmentHead/DepartmentDashboard';
+import DepartmentAssets from './pages/DepartmentHead/DepartmentAssets';
+import DepartmentRequests from './pages/DepartmentHead/DepartmentRequests';
+
+// Asset Manager Pages
+import AssetManagerLayout from './pages/AssetManager/AssetManagerLayout';
+import AssetManagerDashboard from './pages/AssetManager/AssetManagerDashboard';
+import AssetDirectory from './pages/AssetManager/AssetDirectory';
+import AssetAllocations from './pages/AssetManager/AssetAllocations';
+
 // Employee Pages
 import EmployeeLayout from './pages/Employee/EmployeeLayout';
 import EmployeeHome from './pages/Employee/EmployeeHome';
@@ -45,6 +57,32 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="activity-logs" element={<ActivityLogs />} />
             <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="/department-head" element={<DepartmentHeadLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DepartmentDashboard />} />
+            <Route path="assets" element={<DepartmentAssets />} />
+            <Route path="requests" element={<DepartmentRequests />} />
+            <Route path="*" element={
+              <div className="p-8 text-center bg-slate-900/50 rounded-2xl border border-slate-800">
+                <h3 className="text-xl font-bold text-slate-200">Page Under Construction</h3>
+                <p className="text-slate-400 mt-2">This feature is currently being developed.</p>
+              </div>
+            } />
+          </Route>
+
+          <Route path="/asset-manager" element={<AssetManagerLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AssetManagerDashboard />} />
+            <Route path="assets" element={<AssetDirectory />} />
+            <Route path="allocations" element={<AssetAllocations />} />
+            <Route path="*" element={
+              <div className="p-8 text-center bg-slate-900/50 rounded-2xl border border-slate-800">
+                <h3 className="text-xl font-bold text-slate-200">Page Under Construction</h3>
+                <p className="text-slate-400 mt-2">This feature is currently being developed.</p>
+              </div>
+            } />
           </Route>
 
           <Route path="/employee" element={<EmployeeLayout />}>

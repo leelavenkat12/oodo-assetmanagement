@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Laptop, Search, FileText, Wrench, RotateCcw, X, Info } from 'lucide-react';
+import { Laptop, Search, FileText, Wrench, RotateCcw, X, Info, Plus } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import toast from 'react-hot-toast';
 
 export default function MyAssets() {
-  const { assets, currentUser } = useAppContext();
+  const { assets, currentUser, categories, submitAllocationRequest } = useAppContext();
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [reqForm, setReqForm] = useState({ category: '', reason: '' });
   const myAssets = assets.filter(a => a.assignedTo === currentUser?.name);
+
+  const handleSubmitRequest = () => {
+    if (!reqForm.category || !reqForm.reason) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    submitAllocationRequest({
+      employeeName: currentUser.name,
+      category: reqForm.category,
+      reason: reqForm.reason,
+      date: new Date().toISOString(),
+    });
+    toast.success('Allocation request submitted! Your Dept Head will review it.');
+    setShowRequestModal(false);
+    setReqForm({ category: '', reason: '' });
+  };
 
   return (
     <div className="space-y-6 pb-10">
@@ -16,6 +35,15 @@ export default function MyAssets() {
           My Assets
         </h1>
         <p className="text-slate-400 mt-1">View and manage equipment assigned to you.</p>
+      </div>
+      <div className="flex justify-end">
+        <button 
+          onClick={() => setShowRequestModal(true)}
+          className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)] transition-all"
+        >
+          <Laptop className="w-4 h-4" />
+          Request New Asset
+        </button>
       </div>
 
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
@@ -161,6 +189,77 @@ export default function MyAssets() {
                 >
                   <RotateCcw className="w-4 h-4" /> Return Asset
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Request New Asset Modal */}
+      <AnimatePresence>
+        {showRequestModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-100">Request New Asset</h3>
+                <button onClick={() => setShowRequestModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Asset Category</label>
+                  <select
+                    value={reqForm.category}
+                    onChange={e => setReqForm({ ...reqForm, category: e.target.value })}
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500 appearance-none"
+                  >
+                    <option value="">Select Category</option>
+                    {(categories || []).map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                    <option value="Laptop">Laptop</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Keyboard">Keyboard</option>
+                    <option value="Mouse">Mouse</option>
+                    <option value="Headset">Headset</option>
+                    <option value="Chair">Chair</option>
+                    <option value="Desk">Desk</option>
+                    <option value="Projector">Projector</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Reason for Request</label>
+                  <textarea
+                    value={reqForm.reason}
+                    onChange={e => setReqForm({ ...reqForm, reason: e.target.value })}
+                    rows={3}
+                    placeholder="Explain why you need this asset..."
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                  />
+                </div>
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300">
+                  📋 Your request will be reviewed by your Department Head, then the Asset Manager.
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowRequestModal(false)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl py-2.5 text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmitRequest}
+                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+                  >
+                    Submit Request
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

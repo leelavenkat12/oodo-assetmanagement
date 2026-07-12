@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, Shield, Bell, Mail, Database, Globe, Key, Save } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Settings() {
   const sections = [
@@ -80,7 +81,7 @@ export default function Settings() {
                   ))}
                 </ul>
                 <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-end">
-                  <span className="text-sm text-blue-400 font-medium group-hover:text-blue-300 transition-colors">Configure &rarr;</span>
+                  <button onClick={() => toast.success(`${section.title} configuration opened`)} className="text-sm text-blue-400 font-medium group-hover:text-blue-300 transition-colors">Configure &rarr;</button>
                 </div>
               </div>
             </div>
