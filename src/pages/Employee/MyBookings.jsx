@@ -1,10 +1,20 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { CalendarCheck, Eye, XCircle, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarCheck, Eye, XCircle, Download, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
 
 export default function MyBookings() {
-  const { bookings } = useAppContext();
+  const { bookings, currentUser, cancelBooking } = useAppContext();
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const myBookings = bookings.filter(booking => !booking.employeeName || booking.employeeName === currentUser?.name);
+  const downloadApproval = booking => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([`AssetFlow Booking\nResource: ${booking.resourceName}\nDate: ${booking.date}\nTime: ${booking.time}\nStatus: ${booking.status}`], { type: 'text/plain' }));
+    link.download = `booking-${booking.id}.txt`;
+    link.click();
+    toast.success('Booking details downloaded');
+  };
 
   return (
     <div className="space-y-6 pb-10">
@@ -29,11 +39,11 @@ export default function MyBookings() {
               </tr>
             </thead>
             <tbody>
-              {bookings.length === 0 ? (
+              {myBookings.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-slate-500">You have no booking history.</td>
                 </tr>
-              ) : bookings.map((booking, i) => (
+              ) : myBookings.map((booking, i) => (
                 <motion.tr 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -55,13 +65,13 @@ export default function MyBookings() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View">
+                      <button onClick={() => setSelectedBooking(booking)} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View">
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Download Approval">
+                      <button onClick={() => downloadApproval(booking)} className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Download Approval">
                         <Download className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Cancel Booking">
+                      <button disabled={booking.status !== 'Pending'} onClick={() => { cancelBooking(booking.id); toast.success('Booking cancelled'); }} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-30" title="Cancel Booking">
                         <XCircle className="w-4 h-4" />
                       </button>
                     </div>
@@ -72,6 +82,7 @@ export default function MyBookings() {
           </table>
         </div>
       </div>
+      <AnimatePresence>{selectedBooking && <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80"><motion.div initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .95 }} className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl p-6"><div className="flex justify-between"><h2 className="text-xl font-bold">Booking Details</h2><button onClick={() => setSelectedBooking(null)}><X /></button></div><dl className="mt-5 space-y-3 text-sm"><div><dt className="text-slate-500">Resource</dt><dd>{selectedBooking.resourceName}</dd></div><div><dt className="text-slate-500">Schedule</dt><dd>{selectedBooking.date} at {selectedBooking.time}</dd></div><div><dt className="text-slate-500">Purpose</dt><dd>{selectedBooking.purpose}</dd></div><div><dt className="text-slate-500">Status</dt><dd>{selectedBooking.status}</dd></div></dl></motion.div></div>}</AnimatePresence>
     </div>
   );
 }

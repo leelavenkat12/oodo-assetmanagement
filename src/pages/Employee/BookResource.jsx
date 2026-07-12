@@ -5,7 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function BookResource() {
-  const { resources, bookResource } = useAppContext();
+  const { resources, bookResource, currentUser } = useAppContext();
   const [selectedResource, setSelectedResource] = useState(null);
   const [formData, setFormData] = useState({ date: '', time: '', purpose: '', duration: '1 Hour' });
 
@@ -17,6 +17,7 @@ export default function BookResource() {
     
     bookResource({
       resourceName: selectedResource.name,
+      employeeName: currentUser?.name,
       ...formData
     });
     

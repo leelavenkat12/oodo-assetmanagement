@@ -2,18 +2,30 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserSquare2, Search, Filter, MoreVertical, Edit2, ShieldAlert, Ban, ShieldCheck, Mail, Phone, Laptop, Clock, CheckCircle, Trash2, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function EmployeeDirectory() {
   const { users, approveUser, updateUser, deleteUser } = useAppContext();
+  const location = useLocation();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [assignRole, setAssignRole] = useState('Employee');
   const [editFormData, setEditFormData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   // Filter out the main Admin user from being edited if desired, or just show all
-  const displayUsers = users;
+  const selectedDepartment = location.state?.department;
+  const departmentUsers = selectedDepartment
+    ? users.filter(user => user.department === selectedDepartment)
+    : users;
+  const displayUsers = departmentUsers.filter(user => {
+    const matchesSearch = [user.name, user.email, user.role, user.department].some(value => value?.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch && (statusFilter === 'All' || user.status === statusFilter);
+  });
 
   const handleReviewClick = (user, e) => {
     e.stopPropagation();
@@ -70,7 +82,7 @@ export default function EmployeeDirectory() {
               <UserSquare2 className="w-5 h-5 text-blue-500" />
               Employee Directory
             </h2>
-            <button className="text-slate-400 hover:text-slate-200">
+            <button onClick={() => setShowFilters(!showFilters)} className="text-slate-400 hover:text-slate-200">
               <Filter className="w-5 h-5" />
             </button>
           </div>
@@ -78,10 +90,11 @@ export default function EmployeeDirectory() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input 
               type="text" 
-              placeholder="Search by name, role, or department..." 
+              placeholder="Search by name, role, or department..." value={searchTerm} onChange={event => setSearchTerm(event.target.value)}
               className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
+          {showFilters && <div className="flex gap-3"><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="All">All statuses</option><option value="Active">Active</option><option value="Pending">Pending</option><option value="Deactivated">Deactivated</option></select><button onClick={() => { setStatusFilter('All'); setSearchTerm(''); }} className="text-sm text-blue-400">Clear</button></div>}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
@@ -104,7 +117,7 @@ export default function EmployeeDirectory() {
                   user.role === 'Department Head' ? 'bg-amber-500/20 text-amber-400' : 
                   'bg-blue-500/20 text-blue-400'
                 }`}>
-                  {user.name.charAt(0)}
+                  {user.photo ? <img src={user.photo} alt="Profile" className="w-full h-full rounded-full object-cover" /> : user.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-slate-200 truncate">{user.name}</h3>

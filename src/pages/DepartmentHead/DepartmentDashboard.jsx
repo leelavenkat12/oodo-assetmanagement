@@ -1,10 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { MonitorSmartphone, Users, CheckCircle, Clock } from 'lucide-react';
 
 export default function DepartmentDashboard() {
   const { currentUser, assets, users } = useAppContext();
+  const navigate = useNavigate();
   
   // Department specific stats
   const deptAssets = assets?.filter(a => a.department === currentUser?.department) || [];
@@ -86,16 +88,16 @@ export default function DepartmentDashboard() {
         <div className="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-slate-100 mb-6 border-b border-slate-800 pb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium hover:bg-blue-500/20 hover:scale-[1.02] transition-all">
+            <button onClick={() => navigate('/department-head/requests')} className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium hover:bg-blue-500/20 hover:scale-[1.02] transition-all">
               Approve Allocation
             </button>
-            <button className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 font-medium hover:bg-purple-500/20 hover:scale-[1.02] transition-all">
+            <button onClick={() => navigate('/department-head/requests')} className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 font-medium hover:bg-purple-500/20 hover:scale-[1.02] transition-all">
               Approve Transfer
             </button>
-            <button className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-medium hover:bg-green-500/20 hover:scale-[1.02] transition-all">
+            <button onClick={() => navigate('/department-head/bookings')} className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-medium hover:bg-green-500/20 hover:scale-[1.02] transition-all">
               Book Resource
             </button>
-            <button className="p-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 font-medium hover:bg-slate-700 hover:scale-[1.02] transition-all">
+            <button onClick={() => navigate('/department-head/assets')} className="p-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 font-medium hover:bg-slate-700 hover:scale-[1.02] transition-all">
               View Assets
             </button>
           </div>

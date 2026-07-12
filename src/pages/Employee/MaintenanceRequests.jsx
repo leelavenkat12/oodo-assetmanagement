@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, Plus, UploadCloud, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function MaintenanceRequests() {
   const { maintenanceRequests, assets, currentUser, submitMaintenance } = useAppContext();
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
+  useEffect(() => {
+    if (location.state?.assetName) setShowModal(true);
+  }, [location.state?.assetName]);
   
   const myAssets = assets.filter(a => a.assignedTo === currentUser?.name);
   const myRequests = maintenanceRequests; // Filter if needed
 
-  const [formData, setFormData] = useState({ asset: '', issueType: 'Hardware', priority: 'Medium', description: '' });
+  const [formData, setFormData] = useState({ asset: location.state?.assetName || '', issueType: 'Hardware', priority: 'Medium', description: '' });
 
   const handleSubmit = () => {
     if (!formData.asset || !formData.description) {

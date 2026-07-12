@@ -7,13 +7,15 @@ export default function DepartmentAssets() {
   const { currentUser, assets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   // Get only department assets
   const deptAssets = assets?.filter(a => a.department === currentUser?.department) || [];
 
-  const filteredAssets = deptAssets.filter(a => 
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAssets = deptAssets.filter(a =>
+    (a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'All' || a.status === statusFilter)
   );
 
   return (
@@ -31,11 +33,12 @@ export default function DepartmentAssets() {
             className="w-full bg-slate-900/80 border border-slate-800 rounded-xl py-3 pl-12 pr-4 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-lg"
           />
         </div>
-        <button className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl transition-all shadow-lg hover:scale-[1.02]">
+        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl transition-all shadow-lg hover:scale-[1.02]">
           <Filter className="w-5 h-5" />
           <span>Filters</span>
         </button>
       </div>
+      {showFilters && <div className="flex gap-3"><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"><option value="All">All statuses</option><option>Available</option><option>Assigned</option><option>Maintenance</option></select><button onClick={() => setStatusFilter('All')} className="text-sm text-blue-400">Clear</button></div>}
 
       <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">

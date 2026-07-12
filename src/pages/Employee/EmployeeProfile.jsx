@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { User, Mail, Building, Key, Camera, Save } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function EmployeeProfile() {
-  const { currentUser } = useAppContext();
+  const { currentUser, updateUser, resetUserPassword } = useAppContext();
   const [isSaving, setIsSaving] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const photoInputRef = useRef(null);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -14,12 +15,42 @@ export default function EmployeeProfile() {
       toast.error('New passwords do not match!');
       return;
     }
+    if (passwords.current !== (currentUser.password || 'password123')) {
+      toast.error('Current password is incorrect.');
+      return;
+    }
     
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    resetUserPassword(currentUser.email, passwords.new);
     toast.success('Password updated successfully!');
     setPasswords({ current: '', new: '', confirm: '' });
     setIsSaving(false);
+  };
+
+  const handlePhotoChange = event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSize = 256;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        updateUser(currentUser.id, { photo: canvas.toDataURL('image/jpeg', 0.82) });
+        toast.success('Profile photo updated.');
+      };
+      image.onerror = () => toast.error('That image could not be opened.');
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   if (!currentUser) return null;
@@ -40,11 +71,12 @@ export default function EmployeeProfile() {
           
           <div className="relative">
             <div className="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-900 shadow-xl flex items-center justify-center text-5xl font-bold text-slate-500 overflow-hidden group">
-              {currentUser.name.charAt(0)}
-              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              {currentUser.photo ? <img src={currentUser.photo} alt="Profile" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
+              <button type="button" onClick={() => photoInputRef.current?.click()} className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <Camera className="w-6 h-6 text-white mb-1" />
                 <span className="text-xs text-white font-medium">Change</span>
-              </div>
+              </button>
+              <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
             </div>
           </div>
           

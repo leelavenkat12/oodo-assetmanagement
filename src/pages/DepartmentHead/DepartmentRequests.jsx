@@ -5,10 +5,12 @@ import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
 
 export default function DepartmentRequests() {
-  const { allocationRequests, approveAllocationDeptHead, rejectAllocation } = useAppContext();
+  const { allocationRequests, approveAllocationDeptHead, rejectAllocation, currentUser } = useAppContext();
 
   // Filter requests that are pending Dept Head approval
-  const requests = allocationRequests?.filter(r => r.status === 'Pending Dept Head Approval') || [];
+  const requests = allocationRequests?.filter(r =>
+    r.status === 'Pending Dept Head Approval' && r.department === currentUser?.department
+  ) || [];
 
   const handleApprove = (req) => {
     approveAllocationDeptHead(req.id);

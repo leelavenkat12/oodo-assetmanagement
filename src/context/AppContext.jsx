@@ -8,10 +8,44 @@ export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
   const [data, setData] = useState(() => {
-    const saved = localStorage.getItem('assetflow_data');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    const saved = localStorage.getItem("assetflow_data");
+
+if (saved) {
+  try {
+    const parsed = JSON.parse(saved);
+
+    return {
+      ...initialDummyData,
+      bookings: [],
+      maintenanceRequests: [],
+      transferRequests: [],
+      allocationRequests: [],
+      notifications: [],
+      resources: [],
+      organizationSettings: {
+        companyName: "",
+        email: "",
+        phone: "",
+        website: "",
+        gst: "",
+        addressLine1: "",
+        city: "",
+        state: "",
+        country: "",
+        pincode: "",
+        assetPrefix: "AST",
+        startingNumber: "1000",
+        padding: "4",
+        qrEnabled: true,
+        financialYear: "2026-27",
+        currency: "INR",
+      },
+      ...parsed,
+    };
+  } catch (e) {
+    localStorage.removeItem("assetflow_data");
+  }
+}
     return {
       ...initialDummyData,
       currentUser: null,
@@ -142,9 +176,21 @@ export const AppProvider = ({ children }) => {
   const updateUser = (userId, updates) => {
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => u.id === userId ? { ...u, ...updates } : u)
+      users: prev.users.map(u => u.id === userId ? { ...u, ...updates } : u),
+      currentUser: prev.currentUser?.id === userId ? { ...prev.currentUser, ...updates } : prev.currentUser
     }));
     logActivity(`Admin updated user details for ID: ${userId}`);
+  };
+
+  const resetUserPassword = (email, newPassword) => {
+    const user = data.users.find(item => item.email.toLowerCase() === email.toLowerCase());
+    if (!user) return false;
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(item => item.id === user.id ? { ...item, password: newPassword } : item),
+      activities: [{ id: `l${Date.now()}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: new Date().toISOString().split('T')[0], action: `Password reset for ${user.email}` }, ...(prev.activities || [])]
+    }));
+    return true;
   };
 
   const deleteUser = (userId) => {
@@ -175,6 +221,16 @@ export const AppProvider = ({ children }) => {
     logActivity(`Admin deleted department`);
   };
 
+  const updateDepartment = (id, updates) => {
+    setData(prev => ({
+      ...prev,
+      departments: prev.departments.map(department =>
+        department.id === id ? { ...department, ...updates } : department
+      )
+    }));
+    logActivity(`Admin updated department: ${updates.name || id}`);
+  };
+
   const addAsset = (asset) => {
     setData(prev => ({ ...prev, assets: [{ ...asset, id: `AST-${Date.now().toString().slice(-4)}` }, ...prev.assets] }));
     logActivity(`Asset Manager added new asset: ${asset.name}`);
@@ -201,6 +257,21 @@ export const AppProvider = ({ children }) => {
     addNotification('Resource Booking', `New booking request for ${booking.resourceName}`, 'Department Head');
   };
 
+  const cancelBooking = (id) => {
+    setData(prev => ({ ...prev, bookings: prev.bookings.map(booking => booking.id === id ? { ...booking, status: 'Cancelled' } : booking) }));
+    logActivity(`Booking ${id} was cancelled`);
+  };
+
+  const returnAsset = (assetId) => {
+    const asset = data.assets.find(item => item.id === assetId);
+    setData(prev => ({
+      ...prev,
+      assets: prev.assets.map(item => item.id === assetId ? { ...item, status: 'Available', assignedTo: null } : item),
+      activities: [{ id: `l${Date.now()}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: new Date().toISOString().split('T')[0], action: `Employee returned ${asset?.assetId || assetId}` }, ...(prev.activities || [])]
+    }));
+    addNotification('Asset Returned', `${asset?.name || 'An asset'} was returned and is now available.`, 'Asset Manager');
+  };
+
   const submitMaintenance = (req) => {
     setData(prev => ({ ...prev, maintenanceRequests: [{ ...req, id: `m${Date.now()}`, status: 'Pending' }, ...prev.maintenanceRequests] }));
     addNotification('Maintenance Request', `New maintenance request for ${req.assetName}`, 'Asset Manager');
@@ -223,6 +294,7 @@ export const AppProvider = ({ children }) => {
       allocationRequests: prev.allocationRequests.map(r => r.id === id ? { ...r, status: 'Pending Asset Manager' } : r)
     }));
     addNotification('Allocation Request Forwarded', `Dept Head approved request ${id}`, 'Asset Manager');
+    addNotification('Allocation Request Approved', `Department Head approved request ${id}; awaiting Asset Manager assignment.`, 'Admin');
     logActivity(`Dept Head approved allocation request ${id}`);
   };
 
@@ -236,21 +308,67 @@ export const AppProvider = ({ children }) => {
   };
 
   const approveAllocationAssetManager = (id) => {
-    setData(prev => ({
-      ...prev,
-      allocationRequests: prev.allocationRequests.map(r => r.id === id ? { ...r, status: 'Approved' } : r)
-    }));
-    addNotification('Allocation Request Approved', `Your request ${id} was approved!`, 'Employee');
-    logActivity(`Asset Manager approved allocation request ${id}`);
+    setData(prev => {
+      const request = prev.allocationRequests.find(r => r.id === id);
+      const availableAsset = prev.assets.find(asset =>
+        asset.status === 'Available' && asset.category === request?.category
+      );
+
+      return {
+        ...prev,
+        assets: availableAsset
+          ? prev.assets.map(asset => asset.id === availableAsset.id
+            ? { ...asset, status: 'Assigned', assignedTo: request.employeeName, department: request.department || asset.department }
+            : asset)
+          : prev.assets,
+        allocationRequests: prev.allocationRequests.map(requestItem => requestItem.id === id
+          ? { ...requestItem, status: availableAsset ? 'Approved' : 'Approved - Asset Pending', assetId: availableAsset?.assetId }
+          : requestItem),
+        notifications: [
+          {
+            id: `n${Date.now()}`,
+            title: availableAsset ? 'Asset Allocated' : 'Allocation Approved',
+            message: availableAsset
+              ? `${availableAsset.name} (${availableAsset.assetId}) has been assigned to you.`
+              : 'Your request is approved. An asset will be assigned when inventory is available.',
+            recipientRole: 'Employee',
+            date: new Date().toISOString(),
+            read: false
+          },
+          {
+            id: `n${Date.now()}-admin`,
+            title: 'Allocation Completed',
+            message: availableAsset
+              ? `${availableAsset.assetId} was assigned to ${request.employeeName}.`
+              : `Request ${id} was approved but no matching asset is available.`,
+            recipientRole: 'Admin',
+            date: new Date().toISOString(),
+            read: false
+          },
+          ...(prev.notifications || [])
+        ],
+        activities: [
+          {
+            id: `l${Date.now()}`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date().toISOString().split('T')[0],
+            action: availableAsset
+              ? `Asset Manager assigned ${availableAsset.assetId} to ${request.employeeName}`
+              : `Asset Manager approved allocation request ${id}; no matching asset is available`
+          },
+          ...(prev.activities || [])
+        ]
+      };
+    });
   };
 
   const value = {
     ...data,
     loginUser, logoutUser, updateOrgSettings, registerUser,
-    approveUser, updateUser, deleteUser,
-    addCategory, deleteCategory, addDepartment, deleteDepartment,
+    approveUser, updateUser, deleteUser, resetUserPassword,
+    addCategory, deleteCategory, addDepartment, deleteDepartment, updateDepartment,
     addAsset, updateAsset, deleteAsset,
-    bookResource, submitMaintenance, requestTransfer,
+    bookResource, cancelBooking, returnAsset, submitMaintenance, requestTransfer,
     submitAllocationRequest, approveAllocationDeptHead, rejectAllocation, approveAllocationAssetManager,
     addNotification, markNotificationRead, deleteNotification
   };

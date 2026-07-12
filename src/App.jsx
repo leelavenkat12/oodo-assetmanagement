@@ -20,6 +20,7 @@ import DepartmentHeadLayout from './pages/DepartmentHead/DepartmentHeadLayout';
 import DepartmentDashboard from './pages/DepartmentHead/DepartmentDashboard';
 import DepartmentAssets from './pages/DepartmentHead/DepartmentAssets';
 import DepartmentRequests from './pages/DepartmentHead/DepartmentRequests';
+import DepartmentReports from './pages/DepartmentHead/DepartmentReports';
 
 // Asset Manager Pages
 import AssetManagerLayout from './pages/AssetManager/AssetManagerLayout';
@@ -57,6 +58,7 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="activity-logs" element={<ActivityLogs />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<EmployeeProfile />} />
           </Route>
 
           <Route path="/department-head" element={<DepartmentHeadLayout />}>
@@ -64,6 +66,9 @@ function App() {
             <Route path="dashboard" element={<DepartmentDashboard />} />
             <Route path="assets" element={<DepartmentAssets />} />
             <Route path="requests" element={<DepartmentRequests />} />
+            <Route path="bookings" element={<BookResource />} />
+            <Route path="reports" element={<DepartmentReports />} />
+            <Route path="profile" element={<EmployeeProfile />} />
             <Route path="*" element={
               <div className="p-8 text-center bg-slate-900/50 rounded-2xl border border-slate-800">
                 <h3 className="text-xl font-bold text-slate-200">Page Under Construction</h3>
@@ -77,6 +82,7 @@ function App() {
             <Route path="dashboard" element={<AssetManagerDashboard />} />
             <Route path="assets" element={<AssetDirectory />} />
             <Route path="allocations" element={<AssetAllocations />} />
+            <Route path="profile" element={<EmployeeProfile />} />
             <Route path="*" element={
               <div className="p-8 text-center bg-slate-900/50 rounded-2xl border border-slate-800">
                 <h3 className="text-xl font-bold text-slate-200">Page Under Construction</h3>

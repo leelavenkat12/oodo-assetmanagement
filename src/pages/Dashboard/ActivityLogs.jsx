@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Clock, Filter, Search, Calendar, User, History } from 'lucide-react';
+import { Activity, Clock, Filter, Search, Calendar, User, History, BarChart3 } from 'lucide-react';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useAppContext } from '../../context/AppContext';
 
 export default function ActivityLogs() {
   const { activities } = useAppContext();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [todayOnly, setTodayOnly] = useState(false);
+  const activityData = (activities || []).slice(0, 7).reverse().map((log, index) => ({
+    name: log.date?.slice(5) || `Day ${index + 1}`,
+    actions: index + 1
+  }));
+  const visibleActivities = (activities || []).filter(log =>
+    log.action.toLowerCase().includes(searchTerm.toLowerCase()) && (!todayOnly || log.date === new Date().toISOString().split('T')[0])
+  );
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -18,24 +28,32 @@ export default function ActivityLogs() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+          <h2 className="font-semibold text-slate-200 flex items-center gap-2 mb-5"><BarChart3 className="w-5 h-5 text-blue-400" />Recent activity trend</h2>
+          <div className="h-48"><ResponsiveContainer><BarChart data={activityData}><XAxis dataKey="name" stroke="#64748b" /><YAxis allowDecimals={false} stroke="#64748b" /><Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} /><Bar dataKey="actions" fill="#3b82f6" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
+        </div>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6"><p className="text-slate-400 text-sm">Recorded actions</p><p className="text-4xl font-bold mt-3">{activities?.length || 0}</p><p className="text-sm text-blue-400 mt-4">Live audit trail</p></div>
+      </div>
+
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
         <div className="p-4 border-b border-slate-800 flex flex-wrap gap-4 items-center bg-slate-900/30">
           <div className="relative flex-1 min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input 
               type="text" 
-              placeholder="Search logs..." 
+              placeholder="Search logs..." value={searchTerm} onChange={event => setSearchTerm(event.target.value)}
               className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 bg-slate-950/50 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
+            <button onClick={() => setTodayOnly(!todayOnly)} className={`flex items-center gap-2 border px-4 py-2.5 rounded-xl text-sm transition-colors ${todayOnly ? 'bg-violet-500/20 border-violet-400/40 text-violet-200' : 'bg-slate-950/50 border-slate-800 hover:bg-slate-800 text-slate-300'}`}>
               <Calendar className="w-4 h-4" /> Date
             </button>
-            <button className="flex items-center gap-2 bg-slate-950/50 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
+            <button onClick={() => setSearchTerm('')} className="flex items-center gap-2 bg-slate-950/50 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
               <User className="w-4 h-4" /> User
             </button>
-            <button className="flex items-center gap-2 bg-slate-950/50 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
+            <button onClick={() => { setSearchTerm(''); setTodayOnly(false); }} className="flex items-center gap-2 bg-slate-950/50 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
               <Filter className="w-4 h-4" /> More
             </button>
           </div>
@@ -43,7 +61,7 @@ export default function ActivityLogs() {
 
         <div className="p-6">
           <div className="relative border-l-2 border-slate-800 ml-3 md:ml-4 space-y-8">
-            {activities.map((log, i) => (
+            {visibleActivities.map((log, i) => (
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -68,6 +86,7 @@ export default function ActivityLogs() {
                 </div>
               </motion.div>
             ))}
+            {visibleActivities.length === 0 && <p className="pl-8 text-sm text-slate-400">No activity matches your filters.</p>}
 
           </div>
         </div>

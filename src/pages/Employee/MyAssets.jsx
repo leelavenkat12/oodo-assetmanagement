@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Laptop, Search, FileText, Wrench, RotateCcw, X, Info, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function MyAssets() {
-  const { assets, currentUser, categories, submitAllocationRequest } = useAppContext();
+  const { assets, currentUser, categories, submitAllocationRequest, returnAsset } = useAppContext();
+  const navigate = useNavigate();
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [reqForm, setReqForm] = useState({ category: '', reason: '' });
@@ -18,6 +20,7 @@ export default function MyAssets() {
     }
     submitAllocationRequest({
       employeeName: currentUser.name,
+      department: currentUser.department,
       category: reqForm.category,
       reason: reqForm.reason,
       date: new Date().toISOString(),
@@ -178,13 +181,13 @@ export default function MyAssets() {
 
               <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex gap-4">
                 <button 
-                  onClick={() => { setSelectedAsset(null); /* navigate to maintenance */ }}
+                  onClick={() => { navigate('/employee/maintenance', { state: { assetName: selectedAsset.name } }); setSelectedAsset(null); }}
                   className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <Wrench className="w-4 h-4" /> Report Issue
                 </button>
                 <button 
-                  onClick={() => { setSelectedAsset(null); /* navigate to return logic */ }}
+                  onClick={() => { returnAsset(selectedAsset.id); toast.success(`${selectedAsset.name} returned successfully`); setSelectedAsset(null); }}
                   className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" /> Return Asset

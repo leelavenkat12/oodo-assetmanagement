@@ -4,7 +4,11 @@ import { Laptop, Calendar, Wrench, Bell } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
 export default function EmployeeHome() {
-  const { currentUser, assets, bookings, maintenanceRequests } = useAppContext();
+ const context = useAppContext();
+const currentUser = context.currentUser ?? {};
+const assets = context.assets ?? [];
+const bookings = context.bookings ?? [];
+const maintenanceRequests = context.maintenanceRequests ?? [];
 
   const myAssetsCount = assets.filter(a => a.assignedTo === currentUser?.name).length;
   const pendingBookings = bookings.filter(b => b.status === 'Pending').length;

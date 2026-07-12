@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Laptop, Plus, Download, Upload, QrCode, Search, Filter, MoreHorizontal } from 'lucide-react';
+import { Laptop, Plus, Download, Upload, QrCode, Search, Filter, MoreHorizontal, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import toast from 'react-hot-toast';
 
 export default function Assets() {
-  const { assets, categories, departments, addAsset, deleteAsset } = useAppContext();
+  const { assets, categories, departments, addAsset, deleteAsset, organizationSettings } = useAppContext();
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [qrAsset, setQrAsset] = useState(null);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
     assetId: `AST-00${Math.floor(Math.random() * 900) + 100}`,
@@ -38,10 +44,42 @@ export default function Assets() {
     });
   };
 
-  const handleMockImport = () => {
-    toast.success('15 Assets Imported from CSV successfully');
-    addAsset({ name: 'Imported Dell Desktop', category: 'Desktop', department: 'HR', status: 'Available' });
+  const handleImport = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const lines = String(reader.result).trim().split(/\r?\n/);
+      const headers = lines.shift().split(',').map(header => header.trim().toLowerCase());
+      const imported = lines.map((line, index) => {
+        const values = line.split(',').map(value => value.trim());
+        const row = Object.fromEntries(headers.map((header, column) => [header, values[column] || '']));
+        return { name: row.name || `Imported Asset ${index + 1}`, assetId: row.assetid || row.id || `AST-IMP-${Date.now() + index}`, category: row.category || 'Laptop', department: row.department || 'Inventory', status: row.status || 'Available', assignedTo: row.assignedto || null, purchaseDate: row.purchasedate || new Date().toISOString().slice(0, 10), warranty: row.warranty || 'Not specified' };
+      }).filter(asset => asset.name);
+      imported.forEach(addAsset);
+      toast.success(`${imported.length} asset${imported.length === 1 ? '' : 's'} imported successfully`);
+      event.target.value = '';
+    };
+    reader.readAsText(file);
   };
+
+  const handleExport = () => {
+    const headers = ['assetId', 'name', 'category', 'department', 'status', 'assignedTo', 'purchaseDate', 'warranty'];
+    const csv = [headers.join(','), ...assets.map(asset => headers.map(key => `"${String(asset[key] || '').replaceAll('"', '""')}"`).join(','))].join('\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    link.download = 'assetflow-assets.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success('Assets exported to CSV');
+  };
+
+  const filteredAssets = assets.filter(asset => {
+    const term = searchTerm.toLowerCase();
+    return (!term || [asset.name, asset.assetId, asset.assignedTo].filter(Boolean).some(value => value.toLowerCase().includes(term))) &&
+      (categoryFilter === 'All' || asset.category === categoryFilter) &&
+      (statusFilter === 'All' || asset.status === statusFilter);
+  });
 
   return (
     <div className="space-y-6">
@@ -54,11 +92,12 @@ export default function Assets() {
           <p className="text-slate-400 mt-1">Track and manage all company equipment.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button onClick={handleMockImport} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+          <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleImport} className="hidden" />
+          <button onClick={() => fileInputRef.current?.click()} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
             <Upload className="w-4 h-4" />
             Import CSV
           </button>
-          <button onClick={() => toast.success('Exporting assets data...')} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
+          <button onClick={handleExport} className="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors">
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -78,12 +117,12 @@ export default function Assets() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input 
               type="text" 
-              placeholder="Search assets by name, ID, or owner..." 
+              placeholder="Search assets by name, ID, or owner..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)}
               className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
+            <button onClick={() => setShowFilters(!showFilters)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
               <Filter className="w-4 h-4" /> Filters
             </button>
             <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm transition-colors">
@@ -91,6 +130,7 @@ export default function Assets() {
             </button>
           </div>
         </div>
+        {showFilters && <div className="px-4 pb-4 flex flex-wrap gap-3 bg-slate-900/30"><select value={categoryFilter} onChange={event => setCategoryFilter(event.target.value)} className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"><option value="All">All categories</option>{categories.map(category => <option key={category.id} value={category.name}>{category.name}</option>)}</select><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"><option value="All">All statuses</option><option>Available</option><option>Assigned</option><option>Maintenance</option></select><button onClick={() => { setSearchTerm(''); setCategoryFilter('All'); setStatusFilter('All'); }} className="text-sm text-blue-400">Clear filters</button></div>}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -105,7 +145,7 @@ export default function Assets() {
               </tr>
             </thead>
             <tbody>
-              {assets.map((asset, i) => (
+              {filteredAssets.map((asset, i) => (
                 <motion.tr 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -149,7 +189,7 @@ export default function Assets() {
                   <td className="px-6 py-4 text-slate-300 text-sm">{asset.department}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => toast.success('QR Code Generated')} className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Generate QR">
+                      <button onClick={() => organizationSettings?.qrEnabled ? setQrAsset(asset) : toast.error('QR Codes are disabled in Organization Setup')} className="p-2 text-slate-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-lg transition-colors" title="View QR and asset details">
                         <QrCode className="w-4 h-4" />
                       </button>
                       <div className="relative group/menu">
@@ -169,12 +209,22 @@ export default function Assets() {
                   </td>
                 </motion.tr>
               ))}
+              {filteredAssets.length === 0 && <tr><td colSpan="6" className="px-6 py-10 text-center text-slate-500">No assets match these filters.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       <AnimatePresence>
+        {qrAsset && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex justify-between items-center mb-5"><h3 className="text-xl font-bold">Asset QR Details</h3><button onClick={() => setQrAsset(null)} className="text-slate-400 hover:text-white"><X /></button></div>
+              <div className="flex gap-5 items-center"><img className="w-32 h-32 bg-white rounded-xl p-2" alt={`QR code for ${qrAsset.assetId}`} src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(JSON.stringify({ assetId: qrAsset.assetId, name: qrAsset.name, category: qrAsset.category, status: qrAsset.status, assignedTo: qrAsset.assignedTo || 'Unassigned', department: qrAsset.department }))}`} /><div className="space-y-2 text-sm"><p className="font-bold text-lg">{qrAsset.name}</p><p className="text-violet-300 font-mono">{qrAsset.assetId}</p><p className="text-slate-400">Category: <span className="text-slate-200">{qrAsset.category}</span></p><p className="text-slate-400">Status: <span className="text-slate-200">{qrAsset.status}</span></p><p className="text-slate-400">Assigned to: <span className="text-slate-200">{qrAsset.assignedTo || 'Unassigned'}</span></p><p className="text-slate-400">Department: <span className="text-slate-200">{qrAsset.department}</span></p></div></div>
+              <p className="text-xs text-slate-500 mt-5">This is a real QR code. Scanning it shows this asset’s identification and assignment details.</p>
+            </motion.div>
+          </div>
+        )}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
             <motion.div 

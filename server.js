@@ -20,6 +20,15 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Verify transporter configuration at startup to surface auth/connectivity errors
+transporter.verify(function(error, success) {
+  if (error) {
+    console.error('Nodemailer transporter verification failed:', error);
+  } else {
+    console.log('Nodemailer transporter is ready to send messages');
+  }
+});
+
 // Endpoint to send OTP
 app.post('/api/send-otp', async (req, res) => {
   const { email, otp } = req.body;

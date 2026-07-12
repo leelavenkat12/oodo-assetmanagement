@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { users, loginUser, registerUser } = useAppContext();
+  const { users, loginUser, registerUser, resetUserPassword } = useAppContext();
   
   // Modes: 'login', 'signup', 'otp'
   const [mode, setMode] = useState('login');
@@ -156,8 +156,19 @@ export default function Login() {
     }
   };
 
+  const handlePasswordReset = (event) => {
+    event.preventDefault();
+    setError('');
+    if (!email || !password || !confirmPassword) return setError('Please complete all fields.');
+    if (password !== confirmPassword) return setError('Passwords do not match.');
+    if (!resetUserPassword(email, password)) return setError('No account exists with this email.');
+    toast.success('Password updated. You can now sign in.');
+    setMode('login');
+    setConfirmPassword('');
+  };
+
   return (
-    <div className="min-h-screen w-full flex bg-slate-950 text-slate-100 relative overflow-hidden">
+    <div className="login-shell min-h-screen w-full flex bg-slate-950 text-slate-100 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
@@ -165,7 +176,7 @@ export default function Login() {
       </div>
 
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-center p-16 z-10 border-r border-slate-800/50 bg-slate-950/40 backdrop-blur-sm relative">
+      <div className="login-brand hidden lg:flex w-1/2 flex-col justify-center p-16 z-10 border-r border-slate-800/50 bg-slate-950/40 backdrop-blur-sm relative">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -217,12 +228,12 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Login/Signup Card */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 z-10 relative">
+      <div className="login-auth w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 z-10 relative">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden"
+          className="login-card w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
           
@@ -285,7 +296,7 @@ export default function Login() {
                       <input type="checkbox" className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900" />
                       <span className="text-sm text-slate-400 select-none">Remember me</span>
                     </label>
-                    <a href="#" className="text-sm font-medium text-blue-500 hover:text-blue-400 transition-colors">Forgot Password?</a>
+                    <button type="button" onClick={() => { setMode('forgot'); setError(''); setPassword(''); setConfirmPassword(''); }} className="text-sm font-medium text-blue-500 hover:text-blue-400 transition-colors">Forgot Password?</button>
                   </div>
 
                   {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
@@ -313,6 +324,20 @@ export default function Login() {
                     </button>
                   </p>
                 </div>
+              </motion.div>
+            )}
+
+            {mode === 'forgot' && (
+              <motion.div key="forgot" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+                <div className="mb-8"><h2 className="text-3xl font-bold mb-2 text-slate-100">Reset Password</h2><p className="text-slate-400">Enter your account email and choose a new password.</p></div>
+                <form onSubmit={handlePasswordReset} className="space-y-5">
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-blue-500" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password" className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-blue-500" />
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-blue-500" />
+                  {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
+                  <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl py-3.5">Update Password</button>
+                </form>
+                <button onClick={() => { setMode('login'); setError(''); }} className="mt-6 text-sm text-blue-400 hover:text-blue-300">Back to Sign In</button>
               </motion.div>
             )}
 

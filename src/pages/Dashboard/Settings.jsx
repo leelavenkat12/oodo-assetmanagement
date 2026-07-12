@@ -1,9 +1,15 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Shield, Bell, Mail, Database, Globe, Key, Save } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings as SettingsIcon, Shield, Bell, Mail, Database, Globe, Key, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Settings() {
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('assetflow_settings') || '{}'));
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings['General-Theme'] || 'midnight';
+    document.documentElement.dataset.background = settings['General-Background'] || 'aurora';
+  }, [settings]);
   const sections = [
     {
       title: 'General',
@@ -60,7 +66,8 @@ export default function Settings() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-colors group cursor-pointer"
+            onClick={() => setSelectedSection(section)}
+            className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-colors group cursor-pointer text-left"
           >
             <div className="p-6 h-full flex flex-col">
               <div className="flex items-center gap-4 mb-4">
@@ -81,13 +88,32 @@ export default function Settings() {
                   ))}
                 </ul>
                 <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-end">
-                  <button onClick={() => toast.success(`${section.title} configuration opened`)} className="text-sm text-blue-400 font-medium group-hover:text-blue-300 transition-colors">Configure &rarr;</button>
+                  <span className="text-sm text-blue-400 font-medium group-hover:text-blue-300 transition-colors">Configure &rarr;</span>
                 </div>
               </div>
             </div>
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {selectedSection && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-6"><h2 className="text-xl font-bold text-slate-100">{selectedSection.title}</h2><button onClick={() => setSelectedSection(null)} className="text-slate-400 hover:text-white"><X /></button></div>
+              <div className="space-y-4">
+                {selectedSection.fields.map(field => {
+                  const key = `${selectedSection.title}-${field}`;
+                  if (field === 'Theme') return <label key={key} className="block text-sm text-slate-300">Theme<select value={settings[key] || 'midnight'} onChange={event => setSettings({ ...settings, [key]: event.target.value })} className="mt-1.5 w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100"><option value="midnight">Midnight</option><option value="light">Apple Light</option></select></label>;
+                  if (field === 'Language') return <label key={key} className="block text-sm text-slate-300">Background<select value={settings['General-Background'] || 'aurora'} onChange={event => setSettings({ ...settings, 'General-Background': event.target.value })} className="mt-1.5 w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100"><option value="aurora">Aurora</option><option value="plain">Plain</option><option value="ocean">Ocean</option></select></label>;
+                  return <label key={key} className="block text-sm text-slate-300">{field}<input value={settings[key] || ''} onChange={event => setSettings({ ...settings, [key]: event.target.value })} placeholder={`Set ${field.toLowerCase()}`} className="mt-1.5 w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500" /></label>;
+                })}
+              </div>
+              <button onClick={() => { localStorage.setItem('assetflow_settings', JSON.stringify(settings)); toast.success(`${selectedSection.title} settings saved`); setSelectedSection(null); }} className="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 font-medium flex justify-center items-center gap-2"><Save className="w-5 h-5" />Save Changes</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

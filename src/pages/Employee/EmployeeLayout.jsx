@@ -53,15 +53,15 @@ export default function EmployeeLayout() {
         </div>
 
         <div className="px-4 pb-4">
-          <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-              {currentUser.name.charAt(0)}
+          <button onClick={() => navigate('/employee/profile')} className="w-full text-left bg-slate-900/50 p-3 rounded-xl border border-slate-800/50 flex items-center gap-3 hover:border-violet-400/50 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center font-bold overflow-hidden">
+              {currentUser.photo ? <img src={currentUser.photo} alt="Profile" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-200 truncate">{currentUser.name}</p>
               <p className="text-xs text-slate-400">{currentUser.department}</p>
             </div>
-          </div>
+          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
@@ -127,7 +127,7 @@ export default function EmployeeLayout() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl overflow-hidden"
+                    className="absolute right-0 mt-3 w-80 bg-[#1c1b29]/95 backdrop-blur-3xl border border-white/15 rounded-2xl shadow-[0_24px_70px_rgba(0,0,0,0.45)] overflow-hidden z-[100] isolate"
                   >
                     <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/30">
                       <h3 className="font-semibold text-slate-200">Notifications</h3>

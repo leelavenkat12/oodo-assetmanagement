@@ -2,27 +2,52 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Edit2, Trash2, UserPlus, MoreVertical } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function Departments() {
-  const { departments, users, addDepartment, deleteDepartment } = useAppContext();
+  const { departments, users, addDepartment, deleteDepartment, updateDepartment } = useAppContext();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState(null);
   const [formData, setFormData] = useState({ name: '', code: '', head: 'Select Head' });
+  const normalizeDepartment = department => department.name.toLowerCase().replace(/\s*department\s*$/, '').trim();
+  const visibleDepartments = departments.filter((department, index, all) =>
+    all.findIndex(candidate => normalizeDepartment(candidate) === normalizeDepartment(department)) === index
+  );
 
   const handleSave = () => {
     if (!formData.name || !formData.code || formData.head === 'Select Head') {
       toast.error('Please fill all fields');
       return;
     }
-    addDepartment({
-      name: formData.name,
-      code: formData.code,
-      head: formData.head,
-      employeesCount: 0
-    });
-    toast.success('Department created successfully!');
+    if (editingDepartment) {
+      updateDepartment(editingDepartment.id, formData);
+      toast.success('Department updated successfully!');
+    } else {
+      addDepartment({
+        name: formData.name,
+        code: formData.code,
+        head: formData.head,
+        employeesCount: 0
+      });
+      toast.success('Department created successfully!');
+    }
     setShowModal(false);
+    setEditingDepartment(null);
     setFormData({ name: '', code: '', head: 'Select Head' });
+  };
+
+  const openCreateModal = () => {
+    setEditingDepartment(null);
+    setFormData({ name: '', code: '', head: 'Select Head' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (department) => {
+    setEditingDepartment(department);
+    setFormData({ name: department.name, code: department.code, head: department.head });
+    setShowModal(true);
   };
 
   return (
@@ -36,7 +61,7 @@ export default function Departments() {
           <p className="text-slate-400 mt-1">Manage company departments and their heads.</p>
         </div>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={openCreateModal}
           className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-5 py-2.5 text-sm font-medium flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)] transition-all"
         >
           <Plus className="w-4 h-4" />
@@ -45,7 +70,7 @@ export default function Departments() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {departments.map((dept, i) => (
+        {visibleDepartments.map((dept, i) => (
           <motion.div
             key={dept.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -81,15 +106,15 @@ export default function Departments() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500">Employees</span>
-                <span className="text-slate-200 font-medium">{dept.employeesCount}</span>
+                <span className="text-slate-200 font-medium">{users.filter(user => user.department === dept.code || normalizeDepartment({ name: user.department }) === normalizeDepartment(dept)).length}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-4 border-t border-slate-800/50">
-              <button className="flex items-center justify-center gap-2 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors">
+              <button onClick={() => openEditModal(dept)} className="flex items-center justify-center gap-2 py-2 text-sm text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors">
                 <Edit2 className="w-4 h-4" /> Edit
               </button>
-              <button className="flex items-center justify-center gap-2 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition-colors">
+              <button onClick={() => navigate('/admin/employee-directory', { state: { department: dept.name } })} className="flex items-center justify-center gap-2 py-2 text-sm text-slate-400 hover:bg-slate-800 rounded-lg transition-colors">
                 <UserPlus className="w-4 h-4" /> Employees
               </button>
             </div>
@@ -106,7 +131,7 @@ export default function Departments() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl"
             >
-              <h3 className="text-lg font-bold text-slate-100 mb-4">Create Department</h3>
+              <h3 className="text-lg font-bold text-slate-100 mb-4">{editingDepartment ? 'Edit Department' : 'Create Department'}</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Department Name</label>
@@ -141,7 +166,10 @@ export default function Departments() {
                 </div>
                 <div className="flex gap-3 pt-4">
                   <button 
-                    onClick={() => setShowModal(false)}
+                    onClick={() => {
+                      setShowModal(false);
+                      setEditingDepartment(null);
+                    }}
                     className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl py-2.5 text-sm font-medium transition-colors"
                   >
                     Cancel
