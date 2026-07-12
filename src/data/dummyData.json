@@ -1,0 +1,190 @@
+{
+  "organization": {
+    "name": "AssetFlow Technologies Pvt Ltd",
+    "email": "admin@assetflow.com",
+    "phone": "+91 9876543210",
+    "gstNumber": "29ABCDE1234F1Z5",
+    "address": "5th Floor, Tech Park, Bangalore, Karnataka, 560001, India",
+    "workingHours": "9:00 AM - 6:00 PM",
+    "financialYear": "2026-27",
+    "defaultCurrency": "INR",
+    "assetIdPrefix": "AST-",
+    "generateQr": true,
+    "autoAssetNumbering": true,
+    "logo": null
+  },
+  "users": [
+    {
+      "id": "u1",
+      "name": "Admin User",
+      "email": "admin@abc.com",
+      "password": "password123",
+      "role": "Admin",
+      "department": "Management",
+      "status": "Active"
+    },
+    {
+      "id": "u2",
+      "name": "Rahul",
+      "email": "rahul@gmail.com",
+      "password": "password123",
+      "role": "Employee",
+      "department": "IT",
+      "status": "Pending"
+    },
+    {
+      "id": "u3",
+      "name": "Priya",
+      "email": "priya@abc.com",
+      "password": "password123",
+      "role": "Department Head",
+      "department": "IT",
+      "status": "Active"
+    },
+    {
+      "id": "u4",
+      "name": "Aman",
+      "email": "aman@abc.com",
+      "password": "password123",
+      "role": "Asset Manager",
+      "department": "Inventory",
+      "status": "Active"
+    },
+    {
+      "id": "u5",
+      "name": "Riya",
+      "email": "riya@abc.com",
+      "password": "password123",
+      "role": "Department Head",
+      "department": "HR",
+      "status": "Active"
+    }
+  ],
+  "departments": [
+    {
+      "id": "d1",
+      "name": "IT Department",
+      "code": "IT",
+      "head": "Priya",
+      "employeesCount": 42
+    },
+    {
+      "id": "d2",
+      "name": "HR Department",
+      "code": "HR",
+      "head": "Riya",
+      "employeesCount": 8
+    },
+    {
+      "id": "d3",
+      "name": "Finance",
+      "code": "FIN",
+      "head": "Rahul",
+      "employeesCount": 15
+    },
+    {
+      "id": "d4",
+      "name": "Inventory",
+      "code": "INV",
+      "head": "Aman",
+      "employeesCount": 5
+    }
+  ],
+  "categories": [
+    {
+      "id": "c1",
+      "name": "Laptop",
+      "depreciationPeriod": "5 Years",
+      "warrantyRequired": true,
+      "qrEnabled": true
+    },
+    {
+      "id": "c2",
+      "name": "Desktop",
+      "depreciationPeriod": "5 Years",
+      "warrantyRequired": true,
+      "qrEnabled": true
+    },
+    {
+      "id": "c3",
+      "name": "Monitor",
+      "depreciationPeriod": "3 Years",
+      "warrantyRequired": true,
+      "qrEnabled": true
+    },
+    {
+      "id": "c4",
+      "name": "Vehicle",
+      "depreciationPeriod": "10 Years",
+      "warrantyRequired": false,
+      "qrEnabled": true
+    }
+  ],
+  "assets": [
+    {
+      "id": "a1",
+      "assetId": "AST-0012",
+      "name": "Dell Latitude 5440",
+      "category": "Laptop",
+      "status": "Assigned",
+      "department": "IT",
+      "assignedTo": "Rahul",
+      "purchaseDate": "2026-01-15",
+      "warranty": "Valid till 2029"
+    },
+    {
+      "id": "a2",
+      "assetId": "AST-0055",
+      "name": "HP ProBook",
+      "category": "Laptop",
+      "status": "Available",
+      "department": "Inventory",
+      "assignedTo": null,
+      "purchaseDate": "2026-05-10",
+      "warranty": "Valid till 2030"
+    }
+  ],
+  "activities": [
+    {
+      "id": "l1",
+      "time": "10:30 AM",
+      "date": "2026-07-12",
+      "action": "Admin promoted Rahul to Asset Manager"
+    },
+    {
+      "id": "l2",
+      "time": "10:25 AM",
+      "date": "2026-07-12",
+      "action": "Priya assigned Laptop AST-102"
+    },
+    {
+      "id": "l3",
+      "time": "10:12 AM",
+      "date": "2026-07-12",
+      "action": "Rahul added Dell Laptop"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "n1",
+      "title": "New Employee Registration",
+      "message": "Rahul from IT Department is Pending Approval",
+      "time": "1 hour ago",
+      "type": "alert"
+    },
+    {
+      "id": "n2",
+      "title": "Maintenance Due",
+      "message": "Laptop warranty expires tomorrow",
+      "time": "3 hours ago",
+      "type": "warning"
+    },
+    {
+      "id": "n3",
+      "title": "Low Stock Alert",
+      "message": "Only 2 Mouse remaining",
+      "time": "5 hours ago",
+      "type": "info"
+    }
+  ]
+}

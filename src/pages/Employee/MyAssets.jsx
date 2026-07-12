@@ -1,0 +1,171 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Laptop, Search, FileText, Wrench, RotateCcw, X, Info } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
+
+export default function MyAssets() {
+  const { assets, currentUser } = useAppContext();
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const myAssets = assets.filter(a => a.assignedTo === currentUser?.name);
+
+  return (
+    <div className="space-y-6 pb-10">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
+          <Laptop className="w-7 h-7 text-blue-500" />
+          My Assets
+        </h1>
+        <p className="text-slate-400 mt-1">View and manage equipment assigned to you.</p>
+      </div>
+
+      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-900/30">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input 
+              type="text" 
+              placeholder="Search my assets..." 
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-900/80 border-b border-slate-800 text-slate-400 text-sm whitespace-nowrap">
+                <th className="px-6 py-4 font-medium">Asset Name</th>
+                <th className="px-6 py-4 font-medium">Asset ID</th>
+                <th className="px-6 py-4 font-medium">Category</th>
+                <th className="px-6 py-4 font-medium">Assigned Date</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {myAssets.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-500">You currently have no assets assigned.</td>
+                </tr>
+              ) : myAssets.map((asset, i) => (
+                <motion.tr 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  key={asset.id} 
+                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                >
+                  <td className="px-6 py-4 font-semibold text-slate-200">{asset.name}</td>
+                  <td className="px-6 py-4 text-slate-400 font-mono text-sm">{asset.assetId}</td>
+                  <td className="px-6 py-4 text-slate-300 text-sm">{asset.category}</td>
+                  <td className="px-6 py-4 text-slate-400 text-sm">{asset.purchaseDate}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      In Use
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button 
+                      onClick={() => setSelectedAsset(asset)}
+                      className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* View Details Modal */}
+      <AnimatePresence>
+        {selectedAsset && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <h3 className="text-xl font-bold text-slate-100">Asset Details</h3>
+                <button onClick={() => setSelectedAsset(null)} className="text-slate-400 hover:text-slate-200 transition-colors">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                      <div>
+                        <p className="text-slate-500 mb-1">Asset Name</p>
+                        <p className="text-slate-200 font-medium">{selectedAsset.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Asset ID</p>
+                        <p className="text-slate-200 font-medium font-mono">{selectedAsset.assetId}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Category</p>
+                        <p className="text-slate-200 font-medium">{selectedAsset.category}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Warranty</p>
+                        <p className="text-emerald-400 font-medium">{selectedAsset.warranty || 'Valid'}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Assigned Date</p>
+                        <p className="text-slate-200 font-medium">{selectedAsset.purchaseDate}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 mb-1">Condition</p>
+                        <p className="text-slate-200 font-medium">Excellent</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-32 h-32 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center shrink-0 flex-col gap-2 p-2 relative group overflow-hidden">
+                    {/* Mock QR Code Pattern */}
+                    <div className="w-full h-full bg-[url('https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg')] bg-cover bg-center opacity-80 filter invert sepia hue-rotate-[180deg]"></div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-800 pt-6">
+                  <h4 className="text-slate-200 font-medium mb-4 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-blue-400" />
+                    Additional Information
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-950/50 border border-slate-800 rounded-lg text-sm text-slate-300">
+                      <FileText className="w-4 h-4 text-slate-500" /> Invoice Attached
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-950/50 border border-slate-800 rounded-lg text-sm text-slate-300">
+                      <Wrench className="w-4 h-4 text-slate-500" /> 0 Maintenance History
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex gap-4">
+                <button 
+                  onClick={() => { setSelectedAsset(null); /* navigate to maintenance */ }}
+                  className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Wrench className="w-4 h-4" /> Report Issue
+                </button>
+                <button 
+                  onClick={() => { setSelectedAsset(null); /* navigate to return logic */ }}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" /> Return Asset
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
